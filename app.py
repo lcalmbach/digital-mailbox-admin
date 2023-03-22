@@ -6,7 +6,7 @@ import os
 
 
 version_date = '2023-27-02'
-__version__ = '0.0.4'
+__version__ = '0.0.1'
 __author_email__ = 'lcalmbach@gmail.com'
 __author__ = 'Lukas Calmbach'
 git_repo = 'https://github.com/lcalmbach/digitial-mailbox-admin'
