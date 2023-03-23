@@ -3,10 +3,11 @@ from os.path import exists
 import pandas as pd
 from datetime import datetime
 import os
+import requests
 
 
-version_date = '2023-27-02'
-__version__ = '0.0.1'
+version_date = '2023-03-23'
+__version__ = '0.0.2'
 __author_email__ = 'lcalmbach@gmail.com'
 __author__ = 'Lukas Calmbach'
 git_repo = 'https://github.com/lcalmbach/digitial-mailbox-admin'
@@ -36,11 +37,6 @@ def get_filename(filename:str):
         fn = fn = filename.replace('.xlsx', postfix)
         files_exists = exists(local_path + fn)
     return fn
-
-def get_fs():
-    access_key = os.environ.get('AWS_ACCESS_KEY_ID')
-    secret_key = os.environ.get('AWS_SECRET_ACCESS_KEY')
-    pass
 
 def init_mail_verteiler():
     df = pd.read_csv(MAIL_LISTE_DATEI, sep=';')
@@ -73,11 +69,22 @@ def empty_mailbox():
     else:
         st.write(log_df[log_df['status']=='ungelesen'])
     if st.button("Ungelesene Dateien Herunterladen"):
-        st.info("To come soon :rocket:...")
+        target_folder = "c:/temp/"
+        log_df = log_df[log_df['status']=='ungelesen']
+        for index, row in log_df.iterrows():
+            url = f"https://{s3_bucket}.s3.amazonaws.com/{row['filename']}"
+            response = requests.get(url)
+            with open(f"{target_folder}{row['filename']}", 'wb') as f:
+                f.write(response.content)
+            log_df.loc[index]['status'] = 'gelesen'
+            log_df.loc[index]['status_who'] = 'ssscal'
+            log_df.loc[index]['status_timestamp'] = datetime.now()
+
+            st.info(f"{row['filename']} wurde gespeichert")
+        st.write(log_df)
 
 def main():
     st.set_page_config(page_title='digiMail-admin', page_icon = '📬', layout = 'wide')
-    fs = get_fs()
     st.markdown("### Digitale Mailbox📬 Administration")
     st.markdown("**Statistisches Amt des Kantons Basel-Stadt**")
     menu = ['Briefkasten Leeren', 'Versandliste Erstellen']
